@@ -14,40 +14,55 @@ class Interpreter:
 
   def __init__(self, text):
     self.text = text
-    self.pos = 0
+    self.pos = -1
     self.curr_token = None
-    self.curr_char = self.text[self.pos]
+    self.curr_char = None
   
   def error(self, s):
     raise RuntimeError(s)
 
   def next_char(self):
-    if self.pos >= len(self.text):
-      return Token(EOF, None)
-
     self.pos += 1
+    if self.pos >= len(self.text):
+      self.curr_char = None
+      return
+    
+    self.curr_char = self.text[self.pos]
+  
+  def back_char(self):
+    self.pos -= 1
     self.curr_char = self.text[self.pos]
 
   def next_token(self):
     if self.pos >= len(self.text):
       self.curr_token = Token(EOF, None)
+      return
+
+    self.next_char()
 
     if self.curr_char == "+":
-      self.next_char()
       self.curr_token = Token(PLUS, None)
+      return
 
     if self.curr_char == "-":
-      self.next_char()
       self.curr_token = Token(MINUS, None)
+      return
     
     val = ""
-    while self.curr_char.isdigit():
-      val += self.curr_char
-      self.next_char()
+    while True:
+      if not self.curr_char:
+        break
+      if self.curr_char.isdigit():
+        val += self.curr_char
+        self.next_char()
+      else:
+        self.back_char()
+        break
 
     if val:
       num = int(val)
       self.curr_token = Token(NUM, num)
+      return
 
     self.error("No Token Left")
 
